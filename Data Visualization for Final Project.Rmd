@@ -1,0 +1,677 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-07-03"
+---
+# Import necessary packages
+```{r}
+install.packages("tidyverse")
+install.packages("e1071")
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("caTools")
+install.packages("cluster")
+install.packages("factoextra")
+install.packages("stats")
+install.packages("ggplot2")
+install.packages("caret")
+install.packages("caret") 
+```
+
+```{r}
+library(caret)
+library(tidyverse)
+library(e1071)
+library(rpart)
+library(rpart.plot)
+library(caTools)
+library(cluster)
+library(factoextra)
+library(stats)
+library(ggplot2)
+```
+
+# Loading the data set
+```{r}
+data_set <- read.csv("C:\\Users\\dhana\\Downloads\\Sleep_health_and_lifestyle_dataset (1)(Sleep_health_and_lifestyle_data).csv")
+data_set3 <- read.csv("C:\\Users\\dhana\\Downloads\\Sleep_health_and_lifestyle_dataset (1)(Sleep_health_and_lifestyle_data).csv")
+print("Done")
+```
+#displays the first 4 rows of the data frame
+```{r}
+head(data_set, 4)
+
+```
+#displays the last 4 rows of the data frame
+```{r}
+tail(data_set, 4)
+```
+#displays the dimensions of the dataset
+```{r}
+print(dim(data_set))
+```
+#displays the structure of the dataset
+```{r}
+print(str(data_set))
+```
+#displays a statistical summary of each column in the dataset
+```{r}
+print(summary(data_set))
+```
+#The given R code filters and displays all male software engineers aged 30 or below from the data_set
+```{r}
+data_set$Age <- as.numeric(data_set$Age)
+data_set$Occupation <- as.character(data_set$Occupation)
+
+Filter_Occupation01 <- dplyr::filter(data_set, 
+                                     Occupation == "Software Engineer", 
+                                     Age <= 30,
+                                     Gender == "Male")
+
+
+
+Filter_Occupation01
+```
+#This code filters the dataset to select female Software Engineers aged 30 or below.
+```{r}
+Filter_Occupation02 <- dplyr::filter(data_set, Occupation == "Software Engineer", Gender == "Female", Age <= 30)
+Filter_Occupation02
+
+```
+#This code filters the dataset to select male Software Engineers whose sleep duration is 6.2 hours or less and heart rate is 70 or higher.
+```{r}
+Filter_Occupation03 <- dplyr::filter(data_set, Occupation == "Software Engineer", Gender == "Male", Sleep.Duration <= 6.2, Heart.Rate >= 70)
+
+Filter_Occupation03
+```
+#This code filters the dataset to select male Doctors aged 30 or younger with a blood pressure reading of "120/80".
+```{r}
+Filter_Occupation04 <- dplyr::filter(data_set, Occupation == "Doctor", Gender == "Male", Blood.Pressure == "120/80", Age <= 30)
+Filter_Occupation04
+
+```
+#This code calculates the total number of missing values in the entire dataset and also counts missing values column-wise, then prints both results.
+```{r}
+missing_data <- sum(is.na(data_set))
+
+missing_data_colunmwise <- colSums(is.na(data_set))
+
+print(missing_data)
+print(missing_data_colunmwise)
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+#This code creates a blue boxplot showing the age distribution by occupation, highlighting outliers in red.
+```{r}
+library(dplyr)
+library(ggplot2)
+
+data_set %>%
+  ggplot(aes(x = Occupation, y = Age)) +
+  geom_boxplot(outlier.color = "red",
+               outlier.shape = 16,
+               outlier.size = 3,
+               fill = "blue") +
+  labs(title = "Age Distribution by Occupation",
+       x = "Occupation",
+       y = "Age of Person") +
+  theme_bw()
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+
+
+```{r}
+# Assuming dataset03 is your data frame
+new_data_set <- data_set
+
+# Define the columns for which you want to calculate the bounds
+columns <- c("Age")  # List the column names as strings
+
+# Define the threshold for outliers
+outlier_threshold <- 1.5
+
+# Create empty vectors to store the lower and upper bounds
+lower_bounds <- c()
+upper_bounds <- c()
+
+# Calculate the IQR and bounds for each column using a for loop
+for (column in columns) {
+  column_iqr <- IQR(data_set[[column]], na.rm = TRUE)
+  column_lower_bound <- quantile(new_data_set[[column]], 0.25, na.rm = TRUE) - outlier_threshold * column_iqr
+  column_upper_bound <- quantile(new_data_set[[column]], 0.75, na.rm = TRUE) + outlier_threshold * column_iqr
+
+  lower_bounds <- c(lower_bounds, column_lower_bound)
+  upper_bounds <- c(upper_bounds, column_upper_bound)
+}
+
+# Remove outliers for each column using a for loop
+for (i in 1:length(columns)) {
+  column <- columns[i]
+  lower_bound <- lower_bounds[i]
+  upper_bound <- upper_bounds[i]
+
+  data_set <- new_data_set[new_data_set[[column]] >= lower_bound & new_data_set[[column]] <= upper_bound, ]
+}
+
+# Create a combined box plot
+boxplot_data <- data_set[, columns, drop = FALSE]
+boxplot_data %>%
+  ggplot(aes( y = Age)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 16, outlier.size = 3, fill = "blue") +
+  labs(title = "Age",
+       y = "Age of Person") +
+         theme_bw()
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+#This code counts and prints the total number of duplicate rows in the dataset.
+```{r}
+duplicate_data <- sum(duplicated(data_set))
+
+print(duplicate_data)
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+#This code converts the categorical columns BMI.Category, Blood.Pressure, and Sleep.Disorder into numeric codes by first turning them into factors and then to numbers.
+```{r}
+data_set$BMI.Category <- as.numeric(factor(data_set$BMI.Category))
+data_set$Blood.Pressure <- as.numeric(factor(data_set$Blood.Pressure))
+data_set$Sleep.Disorder <- as.numeric(factor(data_set$Sleep.Disorder))
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+#This code creates a new dataset new_data_set by removing the Person.ID column from data_set.
+```{r}
+new_data_set <- subset(data_set, select = -Person.ID)
+```
+#This code displays the first 3 rows of the new_data_set
+```{r}
+head(new_data_set, 3)
+```
+#This code adds a scaled version of the Heart.Rate column to the dataset and displays the first four rows
+```{r}
+new_data_set <- new_data_set %>%
+  mutate(Heart_rate_Scale = scale(new_data_set$Heart.Rate))
+head(new_data_set, 4)
+```
+#This code adds a scaled version of the Daily.Steps column to the dataset and displays the first four rows
+```{r}
+new_data_set <- new_data_set %>%
+  mutate(Daily_Steps_Scale = scale(new_data_set$Daily.Steps))
+head(new_data_set, 4)
+```
+#This code adds a scaled version of the Physical.Activity.Level column to the dataset and displays the first four rows.
+```{r}
+new_data_set <- new_data_set %>%
+  mutate(Physical_Activity_Level_scale = scale(new_data_set$Physical.Activity.Level))
+head(new_data_set, 4)
+```
+#This code plots a scatter plot of scaled heart rate versus scaled daily steps by occupation with a linear trend line.
+```{r}
+new_data_set %>%
+  ggplot(aes(x = Heart_rate_Scale, y = Daily_Steps_Scale, color = Occupation)) +
+  geom_point(size = 3, alpha = 0.4) +
+  geom_smooth(method = "lm", se = F, color = "black") +
+  labs(title = "Scatter plot of Heart rate Vs Daily Steps By Occupation",
+                x = "Heart Rate",
+                y = "Sleep Duration") +
+                  theme_minimal()
+```
+#This code visualizes the relationship between heart rate and physical activity level by gender using a scatter plot with a linear trend line.
+```{r}
+new_data_set %>%
+  ggplot(aes(x = Heart_rate_Scale, y = Physical_Activity_Level_scale, color = Gender)) +
+  geom_point(size = 3, alpha = 0.4) +
+  geom_smooth(method = "lm", se = F, color = "black") +
+  labs(title = "Scatter Plot of Heart Rate Vs Physical Activity Level of Gender",
+                x = "Heart Rate",
+                y = "Physical Activity Level") +
+                  theme_minimal()
+```
+#This code visualizes how sleep duration relates to sleep quality across occupations using a scatter plot with a trend line
+```{r}
+new_data_set %>%
+  ggplot(aes(x = Sleep.Duration, y = Quality.of.Sleep, color = Occupation)) +
+  geom_point(size = 3, alpha = 0.4) +
+  geom_smooth(method = "lm", se = F, color = "black") +
+  labs(title = "Scatter Plot of Sleep Duration Vs Quality of Sleep",
+                x = "Sleep Duration",
+                y = "Quality of Sleep") +
+                  theme_minimal()
+```
+#This code visualizes the relationship between sleep quality and stress level across occupations using a color-coded scatter plot
+```{r}
+new_data_set$Occupation <- as.factor(new_data_set$Occupation)
+
+new_data_set %>%
+  ggplot(aes(x = Quality.of.Sleep, y = Stress.Level, col = Occupation)) +
+  geom_point(size = 3, alpha = 0.4) +
+  scale_color_brewer(palette = "Set3") +
+  labs(title = "Scatter Plot of Quality of Sleep Vs Stress Level",
+                x = "Quality of Sleep",
+                y = "Stress Level") +
+                  theme_minimal()
+```
+#This code creates a scatter plot of age versus sleep duration, colored and faceted by gender, with a linear trend line and a clean black-and-white theme.
+```{r}
+new_data_set$Gender <- as.factor(new_data_set$Gender)
+ggplot(new_data_set, aes(x = Age, y = Sleep.Duration, color = Gender)) +
+  geom_point(size = 3, alpha = 0.4) +
+    geom_smooth(method = "lm", se = F, color = "black") +
+scale_color_brewer(palette = "Set1") +
+facet_wrap(~Gender) +
+labs(title = "Scatter Plot of Age vs Sleep Duration by Gender",
+             x = "Age",
+             y = "Sleep Duration") +
+theme_bw()
+```
+#This code creates a scatter plot showing the distribution of age across different occupations, colored by gender, with a minimal theme applied.
+```{r}
+new_data_set$Gender <- as.factor(new_data_set$Gender)
+ggplot(new_data_set, aes(x = Age, y = Occupation, color = Gender)) +
+geom_point(size = 3, alpha = 0.4) +
+  #geom_smooth(method = "lm", se = F, color = "black") +
+scale_color_brewer(palette = "Set1") +
+labs(title = "Scatter Plot of Age vs Occupation by Gender",
+              x = "Age",
+              y = "Occupation") +
+   theme_minimal()
+```
+#This code creates a scatter plot displaying the relationship between age and BMI category, colored by gender, with a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = Age, y = BMI.Category, color = Gender)) +
+geom_point(size = 3, alpha = 0.4) +
+scale_color_brewer(palette = "Set1") +
+labs(title = "Scatter Plot of Age vs BMI Category by Gender",
+              x = "Age",
+              y = "BMI Category") +
+  theme_minimal()
+```
+#This code creates a dodged bar chart showing the count of people in each age group, separated by gender, with colorful fills and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = factor(Age), fill = Gender)) +
+geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Number of People in Each Age Group by Gender",
+             x = "Age",
+             y = "Count") +
+theme_minimal()
+```
+#This code visualizes the gender distribution across occupations using a dodged bar chart with angled labels for clarity.
+```{r}
+ggplot(new_data_set, aes(x = Occupation, fill = Gender)) +
+geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Number of People in Each Occupation by Gender",
+            x = "Occupation",
+            y = "Count") +
+ theme_minimal() +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+#This code creates a dodged bar chart showing the distribution of sleep duration by gender, using colorful fills and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = factor(Sleep.Duration), fill = Gender)) +
+geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Sleep Duration by Gender",
+             x = "Sleep Duration (hours)",
+             y = "Count") +
+theme_minimal()
+```
+#This code creates a dodged bar chart displaying the distribution of sleep quality by gender with colorful fills and a clean minimal theme
+```{r}
+ggplot(new_data_set, aes(x = factor(Quality.of.Sleep), fill = Gender)) +
+  geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Quality of Sleep by Gender",
+              x = "Quality of Sleep",
+              y = "Count") +
+                theme_minimal()
+```
+#This code creates a dodged bar chart showing the distribution of physical activity levels by gender, using vibrant colors and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = factor(Physical.Activity.Level), fill = Gender)) +
+  geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Physical Activity Level by Gender",
+             x = "Physical Activity Level",
+             y ="Count") +
+theme_minimal()
+```
+#This code visualizes stress level distribution across occupations using a color-coded dodged bar chart.
+```{r}
+ggplot(new_data_set, aes(x = factor(Stress.Level), fill = Occupation)) +
+  geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Stress Level by Gender",
+              x = "Stress Level",
+              y = "Count") +
+                theme_minimal()
+```
+#This code creates a dodged bar chart showing the count of people in each BMI category by gender, using colorful fills and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = BMI.Category, fill = Gender)) +
+geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Number of People in Each BMI Category",
+              x = "BMI Category",
+              y = "Count") +
+                theme_minimal()
+```
+#This code visualizes blood pressure distribution across occupations using a color-coded dodged bar chart.
+```{r}
+ggplot(new_data_set, aes(x = factor(Blood.Pressure), fill = Occupation)) +
+   geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Blood Pressure by Gender",
+              x = "Blood Pressure",
+              y = "Count") +
+                theme_minimal()
+```
+#This code creates a dodged bar chart showing the distribution of heart rate values by gender, using colorful fills and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = factor(Heart.Rate), fill = Gender)) +
+  geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Heart Rate by Gender",
+              x = "Heart Rate",
+              y = "Count") +
+                 theme_minimal()
+```
+#This code visualizes daily steps distribution across occupations using a color-coded dodged bar chart.
+```{r}
+ggplot(new_data_set, aes(x = factor(Daily.Steps), fill = Occupation)) +
+  geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Daily Steps by Gender",
+              x = "Daily Steps",
+              y = "Count") +
+                theme_minimal()
+```
+#This code creates a dodged bar chart showing the distribution of sleep disorders by gender, using colorful fills and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = factor(Sleep.Disorder), fill = Gender)) +
+  geom_bar(position = "dodge") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Sleep Disorder by Gender",
+              x = "Sleep Disorder",
+              y = "Count") +
+                theme_minimal()
+```
+#This code creates a histogram showing the distribution of heart rate values for different occupations, with semi-transparent fills and a minimal theme.
+```{r}
+new_data_set %>%
+  ggplot(aes(x = Heart.Rate, fill = as.factor(Occupation))) +
+  geom_histogram(color = '#e9ecef', alpha = 0.6, position = 'identity', bins = 30) +
+  labs(title = "Heart Rate By Occupation",
+                x = "Heart Rate",
+                y = "count") +
+                  theme_minimal()
+```
+#This code creates a box plot to compare the age distribution between genders, with a minimal theme applied.
+```{r}
+ggplot(new_data_set, aes(x = Gender, y = Age, fill = Gender)) +
+  geom_boxplot() +
+labs(title = "Box Plot of Age by Gender",
+              x = "Gender",
+              y = "Age") +
+                theme_minimal()
+```
+#This code creates a box plot showing the age distribution across occupations, with fill colors representing gender, using a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = Occupation, y = Age, fill = Gender)) +
+  geom_boxplot() +
+labs(title = "Box Plot of Occupation by Age",
+             x = "Occupation",
+             y = "Age") +
+               theme_minimal()
+```
+#This code creates a box plot showing stress level distribution by age, filled by gender, with a minimal theme applied.
+```{r}
+ggplot(new_data_set, aes(x = Age, y = Stress.Level, fill = Gender)) +
+  geom_boxplot() +
+labs(title = "Box Plot of Stress Level by Age",
+              x = "Age",
+              y = "Stress Level") +
+                theme_minimal()
+```
+#This code visualizes age differences across BMI categories by gender using a box plot.
+```{r}
+ggplot(new_data_set, aes(x = BMI.Category, y = Age, fill = Gender)) +
+  geom_boxplot() +
+labs(title = "Box Plot of BMI Category by Age",
+              x = "BMI Category",
+              y = "BMI Category") +
+                theme_minimal()
+```
+#This code visualizes how daily steps vary by age and gender using a box plot.
+```{r}
+ggplot(new_data_set, aes(x = Age, y = Daily.Steps, fill = Gender)) +
+  geom_boxplot() +
+labs(title = "Box Plot of Daily Steps by Age",
+              x = "Daily Steps",
+              y = "Daily Stepsl") +
+                theme_minimal()
+```
+#This code visualizes age distribution across occupations using a density plot with a clear legend below.
+```{r}
+ggplot(new_data_set, aes(x = Age, fill = Occupation)) +
+  geom_density(alpha = 0.5) +
+labs(title = "Density Plot of Age by Occupation",
+              x = "Age",
+              y = "Density") +
+                theme_minimal() +
+theme(legend.position = "bottom", legend.title = element_blank()) +
+guides(fill = guide_legend(nrow = 2))
+```
+#This code creates a density plot showing the distribution of BMI categories by occupation with semi-transparent fills and a minimal theme.
+```{r}
+ggplot(new_data_set, aes(x = `BMI.Category`, fill = `Occupation`)) +
+   geom_density(alpha = 0.5) +
+labs(title = "Density Plot of BMI Category by Occupation ",
+              x = "BMI Category",
+              y ="Density") +
+theme_minimal()
+```
+#This code creates a density plot visualizing the distribution of daily steps across occupations, with transparent fills, a minimal theme, and a legend positioned below the plot.
+```{r}
+ggplot(new_data_set, aes(x = Daily.Steps, fill = Occupation)) +
+geom_density(alpha = 0.5) +
+labs(title = "Density Plot of Daily Steps by Occupation",
+              x = "Daily Steps",
+              y = "Density") +
+                theme_minimal() +
+theme(legend.position = "bottom", legend.title = element_blank()) +
+guides(fill = guide_legend(nrow = 2))
+```
+#This code visualizes the distribution of sleep disorders across occupations using a density plot with a clear legend below.
+```{r}
+ggplot(new_data_set, aes(x = Sleep.Disorder, fill = Occupation)) +
+  geom_density(alpha = 0.5) +
+labs(title = "Density Plot of Daily Steps by Occupation",
+              x = "Sleep Disorder",
+              y = "Density")+
+theme_minimal() +
+theme(legend.position = "bottom", legend.title = element_blank())
+```
+#This code calculates the number of records for each gender in the dataset and stores the results in gender_counts`.
+```{r}
+gender_counts <- new_data_set %>% group_by(Gender) %>% summarise(Count = n())
+```
+#This code creates a pie chart showing the proportion of males and females in the dataset, using colorful fills and a clean, legend-only theme.
+```{r}
+ggplot(gender_counts, aes(x = "", y = Count, fill = Gender)) +
+  geom_bar(width = 1, stat = "identity") +
+    coord_polar(theta = "y") +
+      scale_fill_brewer(palette = "Set3") +
+        labs(title = "Proportion of Males and Females", x = "", y = "") +
+          theme_void() +
+theme(legend.title = element_blank())
+```
+#This code calculates the number of records for each occupation in the dataset and saves the results as occupation_counts`.
+```{r}
+occupation_counts <- new_data_set %>% group_by(Occupation) %>% summarise(Count = n())
+```
+#This code visualizes the occupation distribution in the dataset as a colorful pie chart.
+```{r}
+ggplot(occupation_counts, aes(x = "", y = Count, fill = Occupation)) +
+  geom_bar(width = 1, stat = "identity") + coord_polar(theta = "y") +
+scale_fill_brewer(palette = "Set3") +
+labs(title = "Distribution of Occupations", x = "", y = "") +
+theme_void() +
+theme(legend.title = element_blank())
+```
+#This code calculates the count of records for each BMI category in the dataset and stores the results in bmi_counts`.
+```{r}
+bmi_counts <- new_data_set %>% group_by(BMI.Category) %>% summarise(Count = n())
+```
+#This code creates a colorful pie chart showing the distribution of BMI categories in the dataset, using a clean theme without axis labels.
+```{r}
+# Ensure BMI.Category is categorical
+bmi_counts$BMI.Category <- as.factor(bmi_counts$BMI.Category)
+
+# Create pie chart
+ggplot(bmi_counts, aes(x = "", y = Count, fill = BMI.Category)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta = "y") +
+  scale_fill_brewer(palette = "Set3") +
+  labs(title = "Distribution of BMI Categories", x = "", y = "") +
+  theme_void() +
+  theme(legend.title = element_blank())
+
+```
+#The code converts `Gender` and `Occupation` columns from categorical to numeric format using factor encoding.
+```{r}
+data_set$Gender <- as.numeric(factor(data_set$Gender))
+data_set$Occupation <- as.numeric(factor(data_set$Occupation))
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+#The command displays the count of each category in the `Sleep.Disorder` column of the dataset.
+```{r}
+table(data_set$Sleep.Disorder)
+```
+#The code applies k-means clustering with 3 centers on the first 11 columns of `data_set`, using 20 random starts for better accuracy.
+```{r}
+set.seed(460)
+result <- kmeans(data_set[,1:11], center = 3, nstart = 20)
+
+result
+```
+#The command creates a cross-tabulation showing how the k-means cluster assignments relate to the Sleep.Disorder` categories in the dataset.
+```{r}
+table(result$cluster, data_set$Sleep.Disorder)
+```
+#The code cleans the numeric data by removing missing and infinite values, applies k-means clustering with 3 centers, and visualizes the resulting clusters using a cluster plot.
+```{r}
+library(cluster)
+
+# Clean numeric data (assuming 1:11 are numeric)
+clean_data <- data_set[, 1:11] %>%
+  dplyr::select(where(is.numeric)) %>%
+  na.omit() %>%
+  filter_all(all_vars(!is.infinite(.)))
+
+# Run k-means
+set.seed(460)
+result <- kmeans(clean_data, centers = 3, nstart = 20)
+
+# Plot clusters
+clusplot(clean_data, result$cluster, color = TRUE, shade = TRUE, labels = 0, lines = 0)
+
+```
+#The code creates a character vector `tot.withinss` of length 10 to store values, likely for total within-cluster sum of squares from k-means clustering.
+```{r}
+tot.withinss <- vector(mode = "character", length = 10)
+```
+#The loop stores total within-cluster sum of squares for 1 to 10 clusters in `tot.withinss`.
+```{r}
+for (i in 1:10) {
+  result <- kmeans(data_set[,1:11], center = i, nstart = 20)
+  tot.withinss[i] <- result$tot.withinss
+}
+
+plot(1:10, tot.withinss, type = "b", pch = 20)
+```
+#command in R shows the internal structure of the data_set 
+```{r}
+str(data_set)
+```
+#The command shows the frequency of each category in the `Sleep.Disorder` column.
+```{r}
+table(data_set$Sleep.Disorder)
+```
+#The code converts the `Sleep.Disorder` column into a factor with specified levels 1, 2, and 3.
+```{r}
+data_set$Sleep.Disorder <- factor(data_set$Sleep.Disorder, levels = c(1, 2, 3))
+```
+#The code splits the dataset into 80% training and 20% testing data and shows their dimensions.
+```{r}
+install.packages("caTools")   # Only once
+library(caTools)              # Load the package
+
+set.seed(467)
+split_data <- sample.split(data_set$Sleep.Disorder, SplitRatio = 0.8)
+
+train_data <- data_set[split_data, ]
+test_data  <- data_set[!split_data, ]
+
+dim(train_data)
+dim(test_data)
+
+```
+#The code trains a decision tree model, makes predictions on test data, and evaluates performance using a confusion matrix.
+```{r}
+install.packages("rpart")   # Only once
+library(rpart)              # Load every time you run your script
+
+# Build the decision tree model
+classify <- rpart(
+  formula = Sleep.Disorder ~ Gender + Age + Occupation + Sleep.Duration + Quality.of.Sleep +
+    Physical.Activity.Level + Stress.Level + BMI.Category + Blood.Pressure + Heart.Rate + Daily.Steps,
+  data = train_data,
+  parms = list(split = "gini")
+)
+
+# Make predictions
+model_prediction <- predict(
+  classify,
+  newdata = test_data[, c("Gender", "Age", "Occupation", "Sleep.Duration", "Quality.of.Sleep",
+                          "Physical.Activity.Level", "Stress.Level", "BMI.Category", "Blood.Pressure",
+                          "Heart.Rate", "Daily.Steps")],
+  type = "class"
+)
+
+# View confusion matrix
+table(test_data$Sleep.Disorder, model_prediction)
+
+```
+#The code installs (if needed) and loads the `rpart.plot` package, then visualizes the decision tree model using `rpart.plot()`.
+```{r}
+install.packages("rpart.plot")   # Only needed once
+library(rpart.plot)              # Load the package
+
+rpart.plot(classify, cex = 1)
+```
+#The code evaluates the decision tree model by generating a confusion matrix comparing the actual and predicted sleep disorder classes.
+```{r}
+model_evaluation <- confusionMatrix(test_data$Sleep.Disorder, model_prediction)
+```
+#The command displays the performance metrics of the model, including accuracy, class-wise prediction results, and other evaluation statistics.
+```{r}
+model_evaluation
+```
+
